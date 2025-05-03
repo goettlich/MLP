@@ -37,7 +37,11 @@ class RK4(Integrator):
         
         while idx < len(t):
             
-            dt_step = min(self.dt, t[idx]-t_now) if dt_positive else -min(self.dt, t_now-t[idx])
+            if dt_positive:
+                dt_step = min(self.dt, t[idx]-t_now)
+            else: 
+                dt_step = -min(self.dt, t_now-t[idx])
+                
             x_now = self.rk4_step(f, x_now, t_now, dt_step)
             t_now += dt_step
 

@@ -5,18 +5,21 @@ from matplotlib.animation import PillowWriter
 import matplotlib.animation as animation
 from tqdm import tqdm
 
-def generate_gif(result, model_names, log_every, exp_dir, gif_filename="prediction_progress.gif"):
+def create_learning_gif(result, model_names, log_every, exp_dir, gif_filename="prediction_progress.gif"):
 
     # convert tensors to np.arrays
     ground_truth = np.array(result['ground_truth'])
     for mname in model_names:
         result[mname] = [np.array(r) for r in result[mname]]
 
-    fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(15, 15), sharex=True, sharey=True)
+    # quadratic plot, takes the first n square-rootable elements of test batch
+    n_rows_cols = int(np.sqrt(ground_truth.shape[0]))
+    fig, axs = plt.subplots(nrows=n_rows_cols, ncols=n_rows_cols, figsize=(15, 15), sharex=True, sharey=True)
+    axs = np.atleast_2d(axs)
 
     # axis limits set by ground truth of larges sample in test batch, result (x,y)
-    min_value = np.min(ground_truth, axis=(0,1))
-    max_value = np.max(ground_truth, axis=(0,1))
+    min_value = np.min(ground_truth, axis=(0,1))-0.2
+    max_value = np.max(ground_truth, axis=(0,1))+0.2
     writer = PillowWriter(fps=5)
     
     num_frames = len(result[model_names[0]])
@@ -36,14 +39,10 @@ def generate_gif(result, model_names, log_every, exp_dir, gif_filename="predicti
                     ax.set_xlim(min_value[0], max_value[0])
                     ax.set_ylim(min_value[1], max_value[1])
 
-                # Create a figure-wide legend
+                # Figure-wide legend (only using the one of first figure)
                 handles, labels = axs[0,0].get_legend_handles_labels()
                 fig.legend(handles, labels, loc='upper right', ncol=2, fontsize=28)
-
-                # Add iteration info as a title
                 fig.suptitle(f"Iteration {(i + 1)*log_every}", fontsize=30, x=0.1, ha='left')
-                
-                # Save frame
                 writer.grab_frame()
 
                 pbar.update()
