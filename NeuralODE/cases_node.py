@@ -45,7 +45,7 @@ class TrajectoryDataset(torch.utils.data.Dataset):
         trajectory = ODESolve(f=self.ode, y0=start, t=t, dt=dt)
         return torch.tensor(trajectory).float()
 
-def train_one_epoch(epoch_nr, model, train_dataloader, optimizer, loss_fn, run_dir, log_every=100):
+def train_one_epoch(epoch_nr, model, train_dataloader, states_disp, optimizer, loss_fn, run_dir, log_every=100):
 
     running_loss = 0.0
     model.train()
@@ -66,10 +66,14 @@ def train_one_epoch(epoch_nr, model, train_dataloader, optimizer, loss_fn, run_d
         if i%log_every == log_every-1:
             last_loss = running_loss/log_every
 
+            with torch.no_grad():
+                pred_disp, _ = model(states_disp)
+                loss_disp = loss_fn(pred_disp, states_disp)
+
             print(f"Epoch {epoch_nr+1}, Iteration {i+1}, Training loss {last_loss}")
             plt.figure(figsize=(5,5))
-            plt.plot(*(np.array(pred[0].detach()).T),label="RNN")
-            plt.plot(*(np.array(states[0].detach()).T),label="GT")
+            plt.plot(*(np.array(pred_disp[0].detach()).T),label="RNN")
+            plt.plot(*(np.array(states_disp[0].detach()).T),label="GT")
             plt.legend(loc="upper left")
 
             filename = f"epoch_{str(epoch_nr+1).zfill(3)}_iter_{str(i+1).zfill(4)}.png"
@@ -103,7 +107,8 @@ os.makedirs(run_dir, exist_ok=True)
 train_one_epoch(
     epoch_nr=0, 
     model=model, 
-    train_dataloader=dataloader_pendulum, 
+    train_dataloader=dataloader_pendulum,
+    reference_sample=next(iter(dataloader_pendulum)),
     optimizer=optimizer, 
     loss_fn=loss_fn, 
     run_dir=run_dir,

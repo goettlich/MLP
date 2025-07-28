@@ -1,4 +1,7 @@
 eval/*
 data/*
 *.png
+*.pdf
+*.txt
+*.model
 *.ckpt
