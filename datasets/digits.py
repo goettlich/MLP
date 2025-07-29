@@ -39,10 +39,12 @@ class Digits(Dataset):
         if self.normalized:
             sample = (sample - self.mean) / self.std
 
+        sample = sample.view(1,8,8)
+
         if self.transforms:
             sample = self.transforms(sample)
 
-        return sample.view(1,8,8)
+        return sample 
 
 
 def plot_digits(batch, title="Digits", plot=True):

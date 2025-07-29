@@ -5,3 +5,4 @@ data/*
 *.txt
 *.model
 *.ckpt
+*.gif
